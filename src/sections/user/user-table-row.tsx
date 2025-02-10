@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Popover from '@mui/material/Popover';
@@ -13,17 +12,24 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-export type UserProps = {
+export interface UserProps {
   id: string;
-  name: string;
-  role: string;
-  status: string;
-  company: string;
-  avatarUrl: string;
-  isVerified: boolean;
-};
+  username: string;
+  fullname: string;
+  photo: string;
+  email: string;
+  phone_number: string;
+  status: number;
+  is_verified: number;
+  is_2fa: number;
+  currency: number;
+  language: string;
+  country: string;
+  city: string;
+  role_id: number;
+  last_login: Date;
+  registration_date: Date;
+}
 
 type UserTableRowProps = {
   row: UserProps;
@@ -42,6 +48,24 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     setOpenPopover(null);
   }, []);
 
+  const getCurrencyLabel = (currency: number) => {
+    switch (currency) {
+      case 0: return 'USD';
+      case 1: return 'INR';
+      case 2: return 'Pound';
+      default: return '-';
+    }
+  };
+
+  const getRoleLabel = (roleId: number) => {
+    switch (roleId) {
+      case 0: return 'User';
+      case 1: return 'Admin';
+      case 2: return 'Game Provider';
+      default: return '-';
+    }
+  };
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -51,17 +75,17 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
-            <Avatar alt={row.name} src={row.avatarUrl} />
-            {row.name}
+            <Avatar alt={row.username} src={row.photo} />
+            {row.username}
           </Box>
         </TableCell>
 
-        <TableCell>{row.company}</TableCell>
+        <TableCell>{row.fullname}</TableCell>
 
-        <TableCell>{row.role}</TableCell>
+        <TableCell>{row.email}</TableCell>
 
         <TableCell align="center">
-          {row.isVerified ? (
+          {row.is_verified ? (
             <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
           ) : (
             '-'
@@ -69,8 +93,20 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         </TableCell>
 
         <TableCell>
-          <Label color={(row.status === 'banned' && 'error') || 'success'}>{row.status}</Label>
+          <Label color={row.status === 0 ? 'error' : 'success'}>
+            {row.status === 1 ? 'Active' : 'Inactive'}
+          </Label>
         </TableCell>
+
+        <TableCell>
+          <Label color={row.is_2fa === 1 ? 'success' : 'warning'}>
+            {row.is_2fa === 1 ? 'Enabled' : 'Disabled'}
+          </Label>
+        </TableCell>
+
+        <TableCell>{getCurrencyLabel(row.currency)}</TableCell>
+
+        <TableCell>{getRoleLabel(row.role_id)}</TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
@@ -91,7 +127,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           sx={{
             p: 0.5,
             gap: 0.5,
-            width: 140,
+            width: 160,
             display: 'flex',
             flexDirection: 'column',
             [`& .${menuItemClasses.root}`]: {
@@ -105,6 +141,16 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           <MenuItem onClick={handleClosePopover}>
             <Iconify icon="solar:pen-bold" />
             Edit
+          </MenuItem>
+
+          <MenuItem onClick={handleClosePopover}>
+            <Iconify icon="solar:shield-bold" />
+            Toggle 2FA
+          </MenuItem>
+
+          <MenuItem onClick={handleClosePopover}>
+            <Iconify icon="solar:user-block-bold" />
+            {row.status === 1 ? 'Deactivate' : 'Activate'}
           </MenuItem>
 
           <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>

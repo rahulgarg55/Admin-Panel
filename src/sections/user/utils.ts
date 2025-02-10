@@ -1,6 +1,4 @@
-import type { UserProps } from './user-table-row';
-
-// ----------------------------------------------------------------------
+import type { UserProps } from './view/user-view';
 
 export const visuallyHidden = {
   border: 0,
@@ -14,13 +12,9 @@ export const visuallyHidden = {
   clip: 'rect(0 0 0 0)',
 } as const;
 
-// ----------------------------------------------------------------------
-
 export function emptyRows(page: number, rowsPerPage: number, arrayLength: number) {
   return page ? Math.max(0, (1 + page) * rowsPerPage - arrayLength) : 0;
 }
-
-// ----------------------------------------------------------------------
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -31,8 +25,6 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   }
   return 0;
 }
-
-// ----------------------------------------------------------------------
 
 export function getComparator<Key extends keyof any>(
   order: 'asc' | 'desc',
@@ -50,15 +42,23 @@ export function getComparator<Key extends keyof any>(
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// ----------------------------------------------------------------------
-
 type ApplyFilterProps = {
   inputData: UserProps[];
   filterName: string;
+  filterStatus: string;
+  filterCurrency: string;
+  filter2FA: string;
   comparator: (a: any, b: any) => number;
 };
 
-export function applyFilter({ inputData, comparator, filterName }: ApplyFilterProps) {
+export function applyFilter({
+  inputData,
+  comparator,
+  filterName,
+  filterStatus,
+  filterCurrency,
+  filter2FA
+}: ApplyFilterProps) {
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
 
   stabilizedThis.sort((a, b) => {
@@ -71,8 +71,22 @@ export function applyFilter({ inputData, comparator, filterName }: ApplyFilterPr
 
   if (filterName) {
     inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
+      (user) => 
+        (user.username?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1) ||
+        (user.fullname?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1)
     );
+  }
+
+  if (filterStatus !== 'all') {
+    inputData = inputData.filter((user) => user.status?.toString() === filterStatus);
+  }
+
+  if (filterCurrency !== 'all') {
+    inputData = inputData.filter((user) => user.currency?.toString() === filterCurrency);
+  }
+
+  if (filter2FA !== 'all') {
+    inputData = inputData.filter((user) => user.is_2fa?.toString() === filter2FA);
   }
 
   return inputData;

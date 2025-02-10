@@ -1,17 +1,18 @@
-import { useState, useCallback } from 'react';
-
+import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 
-import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -22,39 +23,126 @@ import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 
-import type { UserProps } from '../user-table-row';
-
-// ----------------------------------------------------------------------
+export interface UserProps {
+  id: string;
+  username: string;
+  fullname: string;
+  patronymic: string;
+  photo: string;
+  dob: Date;
+  gender: string;
+  email: string;
+  phone_number: string;
+  registration_date: Date;
+  last_login: Date;
+  status: number;
+  is_verified: number;
+  is_2fa: number;
+  currency: number;
+  language: string;
+  country: string;
+  city: string;
+  role_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
 
 export function UserView() {
   const table = useTable();
-
+  const [users, setUsers] = useState<UserProps[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCurrency, setFilterCurrency] = useState('all');
+  const [filter2FA, setFilter2FA] = useState('all');
 
-  const dataFiltered: UserProps[] = applyFilter({
-    inputData: _users,
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/players');
+        const data = await response.json();
+        console.log('data', {data})
+        if (data.success) {
+          setUsers(data.data.players);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+
+  const dataFiltered = applyFilter({
+    inputData: users,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
+    filterStatus,
+    filterCurrency,
+    filter2FA,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Users
+          Players
         </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New user
-        </Button>
       </Box>
 
       <Card>
+        <Stack direction="row" spacing={2} sx={{ p: 2 }}>
+          <TextField
+            select
+            label="Status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Status</MenuItem>
+            <MenuItem value="1">Active</MenuItem>
+            <MenuItem value="0">Inactive</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Currency"
+            value={filterCurrency}
+            onChange={(e) => setFilterCurrency(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Currencies</MenuItem>
+            <MenuItem value="0">USD</MenuItem>
+            <MenuItem value="1">INR</MenuItem>
+            <MenuItem value="2">Pound</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="2FA Status"
+            value={filter2FA}
+            onChange={(e) => setFilter2FA(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="1">Enabled</MenuItem>
+            <MenuItem value="0">Disabled</MenuItem>
+          </TextField>
+        </Stack>
+
         <UserTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
@@ -70,22 +158,30 @@ export function UserView() {
               <UserTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={_users.length}
+                rowCount={users.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
                 onSelectAllRows={(checked) =>
                   table.onSelectAllRows(
                     checked,
-                    _users.map((user) => user.id)
+                    users.map((user) => user.id)
                   )
                 }
                 headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'company', label: 'Company' },
-                  { id: 'role', label: 'Role' },
-                  { id: 'isVerified', label: 'Verified', align: 'center' },
+                  { id: 'username', label: 'Username' },
+                  { id: 'fullname', label: 'Full Name' },
+                  { id: 'email', label: 'Email' },
+                  { id: 'phone_number', label: 'Phone Number' },
+                  { id: 'is_verified', label: 'Verified', align: 'center' },
                   { id: 'status', label: 'Status' },
-                  { id: '' },
+                  { id: 'is_2fa', label: '2FA' },
+                  { id: 'currency', label: 'Currency' },
+                  { id: 'language', label: 'Language' },
+                  { id: 'country', label: 'Country' },
+                  { id: 'city', label: 'City' },
+                  { id: 'role_id', label: 'Role' },
+                  { id: 'created_at', label: 'Created At' },
+                  { id: 'actions', label: 'Actions' },
                 ]}
               />
               <TableBody>
@@ -105,7 +201,7 @@ export function UserView() {
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, users.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -117,7 +213,7 @@ export function UserView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={_users.length}
+          count={users.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -128,11 +224,9 @@ export function UserView() {
   );
 }
 
-// ----------------------------------------------------------------------
-
-export function useTable() {
+function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('username');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
@@ -147,19 +241,26 @@ export function useTable() {
   );
 
   const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    if (checked) {
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
+    setSelected(checked ? newSelecteds : []);
   }, []);
 
   const onSelectRow = useCallback(
-    (inputValue: string) => {
-      const newSelected = selected.includes(inputValue)
-        ? selected.filter((value) => value !== inputValue)
-        : [...selected, inputValue];
+    (id: string) => {
+      const selectedIndex = selected.indexOf(id);
+      let newSelected: string[] = [];
 
+      if (selectedIndex === -1) {
+        newSelected = newSelected.concat(selected, id);
+      } else if (selectedIndex === 0) {
+        newSelected = newSelected.concat(selected.slice(1));
+      } else if (selectedIndex === selected.length - 1) {
+        newSelected = newSelected.concat(selected.slice(0, -1));
+      } else if (selectedIndex > 0) {
+        newSelected = newSelected.concat(
+          selected.slice(0, selectedIndex),
+          selected.slice(selectedIndex + 1)
+        );
+      }
       setSelected(newSelected);
     },
     [selected]
@@ -176,18 +277,18 @@ export function useTable() {
   const onChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
+      setPage(0);
     },
-    [onResetPage]
+    []
   );
 
   return {
     page,
     order,
-    onSort,
     orderBy,
     selected,
     rowsPerPage,
+    onSort,
     onSelectRow,
     onResetPage,
     onChangePage,
