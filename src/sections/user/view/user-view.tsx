@@ -1,3 +1,4 @@
+import {env} from 'src/config/env.config';
 import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -59,7 +60,8 @@ export function UserView() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/auth/players');
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
+        const response = await fetch(apiUrl);
         const data = await response.json();
         console.log('data', {data})
         if (data.success) {
