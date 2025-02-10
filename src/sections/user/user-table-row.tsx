@@ -29,6 +29,7 @@ export interface UserProps {
   role_id: number;
   last_login: Date;
   registration_date: Date;
+  created_at: Date;
 }
 
 type UserTableRowProps = {
@@ -66,6 +67,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     }
   };
 
+  const formatDate = (date: Date | null | undefined) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -76,13 +86,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
             <Avatar alt={row.username} src={row.photo} />
-            {row.username}
+            {row.username || '-'}
           </Box>
         </TableCell>
 
-        <TableCell>{row.fullname}</TableCell>
+        <TableCell>{row.fullname || '-'}</TableCell>
 
-        <TableCell>{row.email}</TableCell>
+        <TableCell>{row.email || '-'}</TableCell>
+
+        <TableCell>{row.phone_number || '-'}</TableCell>
 
         <TableCell align="center">
           {row.is_verified ? (
@@ -106,9 +118,17 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
 
         <TableCell>{getCurrencyLabel(row.currency)}</TableCell>
 
+        <TableCell>{row.language || '-'}</TableCell>
+
+        <TableCell>{row.country || '-'}</TableCell>
+
+        <TableCell>{row.city || '-'}</TableCell>
+
         <TableCell>{getRoleLabel(row.role_id)}</TableCell>
 
-        <TableCell align="right">
+        <TableCell>{formatDate(row.created_at)}</TableCell>
+
+        <TableCell>
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>
@@ -138,10 +158,10 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             },
           }}
         >
-          <MenuItem onClick={handleClosePopover}>
+          {/* <MenuItem onClick={handleClosePopover}>
             <Iconify icon="solar:pen-bold" />
             Edit
-          </MenuItem>
+          </MenuItem> */}
 
           <MenuItem onClick={handleClosePopover}>
             <Iconify icon="solar:shield-bold" />
