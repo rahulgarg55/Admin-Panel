@@ -97,11 +97,9 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         <TableCell>{row.phone_number || '-'}</TableCell>
 
         <TableCell align="center">
-          {row.is_verified ? (
-            <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
-          ) : (
-            '-'
-          )}
+         <Label color = {row.is_verified===1? 'success' : 'error'}> 
+          {row.is_verified === 1 ? 'Verified' : 'Unverified'}
+          </Label>
         </TableCell>
 
         <TableCell>
